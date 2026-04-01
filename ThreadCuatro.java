@@ -1,6 +1,6 @@
 import java.util.concurrent.ThreadLocalRandom;
 
-public class ThreadCuatro {
+public class ThreadCuatro implements Runnable {
     final private long totalPoints;
     private long insideCircle;
 
