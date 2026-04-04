@@ -1,25 +1,32 @@
-import java.net.InetSocketAddress;
-import java.nio.channels.ServerSocketChannel;
-import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.*;
+import java.util.concurrent.Future;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        ExecutorService es = Executors.newFixedThreadPool(4);
-
-        long totalPoints = 10_000_000_000L;
+        Instant start = Instant.now(); // record start time
+        ExecutorService es = Executors.newFixedThreadPool(4); // 4 threads
+        long totalPoints = 10_000_000_000L; // total random points
+        long pointsPerThread = totalPoints / 4; // thread handles 1/4
+        // 4 simulation tasks to executor
+        Future<Long>[] future = new Future[4];
+        for (int i = 0; i < 4; i++) {
+            future[i] = es.submit(new TaskSimulation(pointsPerThread));
+        }
+        // collect results
         long insideCircle = 0;
-
-        ThreadUno threadUno = new ThreadUno(totalPoints / 4);
-        ThreadDos threadDos = new ThreadDos(totalPoints / 4);
-        ThreadTres threadTres = new ThreadTres(totalPoints / 4);
-        ThreadCuatro threadCuatro = new ThreadCuatro(totalPoints / 4);
-        //do not have the while(true) loop here
+        for (Future<Long> f : future) {
+            insideCircle += f.get();
+        }
+        double estimate = (double) insideCircle / totalPoints * 4.0; // pi in main thread
+        Instant finish = Instant.now(); // end time
+        long runtime = Duration.between(start, finish).toMillis();
+        // output
+        System.out.println("\nEstimated pi: " + estimate);
+        System.out.println("\nTotal runtime: %.3f seconds" + (runtime / 1000.0));
+        es.shutdown();
+        // do not have the while(true) loop here
         // submit four threads es.submit(new ThreadUno("Thread-1", totalPoints/4));
-        es.submit(new ThreadUno(totalPoints));
-        es.submit(new ThreadDos(totalPoints));
-        es.submit(new ThreadTres(totalPoints));
-        es.submit(new ThreadCuatro(totalPoints));
     }
 }
